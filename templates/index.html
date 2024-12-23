@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Formatos Word</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Generador de Formatos Word</h1>
+
+
+        <!-- Modal de Bootstrap (inicialmente oculto) -->
+        <div class="modal fade" id="alertaModal" tabindex="-1" aria-labelledby="alertaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="alertaModalLabel">¡Atención!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <strong id="modalMensaje">Por favor, completa todos los campos de la fecha de nacimiento.</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
+        <div class="container mt-5">
+            <form id="DATAFORM" method="POST" action="/generate_words">
+                 
+                <!-- Formulario Datos del Estudiante -->
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px;">
+                    <legend>Datos Personales del Estudiante</legend>
+                    <div class="row">
+        
+                        <!-- Año de Nacimiento -->
+                        <div class="col-md-4 mb-3">
+                            <label for="ANIO_EST" class="form-label">Año de Nacimiento</label>
+                            <input type="number" id="ANIO_EST" name="ANIO_EST" class="form-control" placeholder="Ej: 2015" required min="2008" max="2023">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="ANIO_LETRA" class="form-label">Año en Letras</label>
+                            <input type="text" id="ANIO_LETRA" name="ANIO_LETRA" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="ANIO" class="form-label">Año Actual</label>
+                            <input type="number" id="ANIO" name="ANIO" class="form-control" readonly>
+                        </div>
+        
+                        
+
+                        <!-- Día y Mes -->
+                        <div class="col-md-4 mb-3">
+                            <label for="DIA" class="form-label">Día Actual</label>
+                            <input type="number" id="DIA" name="DIA" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="DIA_LETRA" class="form-label">Día en Letras</label>
+                            <input type="text" id="DIA_LETRA" name="DIA_LETRA" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="MES" class="form-label">Mes Actual</label>
+                            <input type="text" id="MES" name="MES" class="form-control" readonly>
+                        </div>
+                        <input type="text" id="MES_NUM" name="MES_NUM" class="form-control" hidden readonly>
+        
+                        <div class="col-md-1 mb-3">
+                            <label for="RH_EST" class="form-label">Factor RH</label>
+                            <select id="RH_EST" name="RH_EST" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+
+                        <!-- Fecha de Nacimiento -->
+                        <div class="col-md-3 mb-3">
+                            <label for="DIA_EST" class="form-label">Día Nacimiento</label>
+                            <input type="number" id="DIA_EST" name="DIA_EST" class="form-control" required min="1" max="31">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="MES_EST" class="form-label">Mes Nacimiento</label>
+                            <input type="number" id="MES_EST" name="MES_EST" class="form-control" required min="1" max="12">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="EDAD_EST" class="form-label">Edad del Estudiante</label>
+                            <input type="number" id="EDAD_EST" name="EDAD_EST" class="form-control" readonly>
+                        </div>
+
+                        <!-- Botón para calcular la edad -->
+                        <div class="col-md-2 mb-3" style="
+                        display: flex;
+                        align-items: flex-end;
+                        justify-content: center;">
+                            <button type="button" class="btn btn-secondary " onclick="calcularEdad()">Calcular Edad</button>
+                        </div>
+
+                        
+        
+                        <!-- Información Personal -->
+                        <div class="col-md-6 mb-3">
+                            <label for="NOMBRE_EST" class="form-label">Nombres</label>
+                            <input type="text" id="NOMBRE_EST" name="NOMBRE_EST" class="form-control" placeholder="Nombres del estudiante" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="APELLIDO_EST" class="form-label">Apellidos</label>
+                            <input type="text" id="APELLIDO_EST" name="APELLIDO_EST" class="form-control" placeholder="Apellidos del estudiante" required>
+                        </div>
+        
+                        <!-- Dirección -->
+                        <div class="col-md-6 mb-3">
+                            <label for="DIRECCION_EST" class="form-label">Dirección</label>
+                            <input type="text" id="DIRECCION_EST" name="DIRECCION_EST" class="form-control" placeholder="Calle 123 #45-67" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="BARRIO_EST" class="form-label">Barrio</label>
+                            <input type="text" id="BARRIO_EST" name="BARRIO_EST" class="form-control" required>
+                        </div>
+        
+                        <!-- Identificación -->
+                        <div class="col-md-6 mb-3">
+                            <label for="TIPO_ID_ESTUDIANTE" class="form-label">Tipo de Identificación</label>
+                            <select id="TIPO_ID_ESTUDIANTE" name="TIPO_ID_ESTUDIANTE" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="R.C.">R.C.</option>
+                                <option value="T.I.">T.I.</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ID_ESTUDIANTE" class="form-label">Número de Documento</label>
+                            <input type="number" id="ID_ESTUDIANTE" name="ID_ESTUDIANTE" class="form-control" required min="1">
+                        </div>
+        
+                        <!-- Lugar de Nacimiento y Expedición -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CIUDAD_NAC_ID_EST" class="form-label">Ciudad de Nacimiento</label>
+                            <input type="text" id="CIUDAD_NAC_ID_EST" name="CIUDAD_NAC_ID_EST" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="DEPT_NAC_ID_EST" class="form-label">Departamento de Nacimiento</label>
+                            <select id="DEPT_NAC_ID_EST" name="DEPT_NAC_ID_EST" class="form-control" required>
+                                <option value="" disabled selected>Selecciona un departamento</option>
+                                <option value="Amazonas">Amazonas</option>
+                                <option value="Antioquia">Antioquia</option>
+                                <option value="Arauca">Arauca</option>
+                                <option value="Atlántico">Atlántico</option>
+                                <option value="Bolívar">Bolívar</option>
+                                <option value="Boyacá">Boyacá</option>
+                                <option value="Caldas">Caldas</option>
+                                <option value="Caquetá">Caquetá</option>
+                                <option value="Casanare">Casanare</option>
+                                <option value="Cauca">Cauca</option>
+                                <option value="Cesar">Cesar</option>
+                                <option value="Chocó">Chocó</option>
+                                <option value="Córdoba">Córdoba</option>
+                                <option value="Cundinamarca">Cundinamarca</option>
+                                <option value="Guainía">Guainía</option>
+                                <option value="Guaviare">Guaviare</option>
+                                <option value="Huila">Huila</option>
+                                <option value="La Guajira">La Guajira</option>
+                                <option value="Magdalena">Magdalena</option>
+                                <option value="Meta">Meta</option>
+                                <option value="Nariño">Nariño</option>
+                                <option value="Norte de Santander">Norte de Santander</option>
+                                <option value="Putumayo">Putumayo</option>
+                                <option value="Quindío">Quindío</option>
+                                <option value="Risaralda">Risaralda</option>
+                                <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                                <option value="Santander">Santander</option>
+                                <option value="Sucre">Sucre</option>
+                                <option value="Tolima">Tolima</option>
+                                <option value="Valle del Cauca">Valle del Cauca</option>
+                                <option value="Vaupés">Vaupés</option>
+                                <option value="Vichada">Vichada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="CIUDAD_EXP_ID_EST" class="form-label">Ciudad de Expedición del ID</label>
+                            <input type="text" id="CIUDAD_EXP_ID_EST" name="CIUDAD_EXP_ID_EST" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="DEPT_EXP_ID_EST" class="form-label">Departamento de Expedición del ID</label>
+                            <select id="DEPT_EXP_ID_EST" name="DEPT_EXP_ID_EST" class="form-control" required>
+                                <option value="" disabled selected>Selecciona un departamento</option>
+                                <option value="Amazonas">Amazonas</option>
+                                <option value="Antioquia">Antioquia</option>
+                                <option value="Arauca">Arauca</option>
+                                <option value="Atlántico">Atlántico</option>
+                                <option value="Bolívar">Bolívar</option>
+                                <option value="Boyacá">Boyacá</option>
+                                <option value="Caldas">Caldas</option>
+                                <option value="Caquetá">Caquetá</option>
+                                <option value="Casanare">Casanare</option>
+                                <option value="Cauca">Cauca</option>
+                                <option value="Cesar">Cesar</option>
+                                <option value="Chocó">Chocó</option>
+                                <option value="Córdoba">Córdoba</option>
+                                <option value="Cundinamarca">Cundinamarca</option>
+                                <option value="Guainía">Guainía</option>
+                                <option value="Guaviare">Guaviare</option>
+                                <option value="Huila">Huila</option>
+                                <option value="La Guajira">La Guajira</option>
+                                <option value="Magdalena">Magdalena</option>
+                                <option value="Meta">Meta</option>
+                                <option value="Nariño">Nariño</option>
+                                <option value="Norte de Santander">Norte de Santander</option>
+                                <option value="Putumayo">Putumayo</option>
+                                <option value="Quindío">Quindío</option>
+                                <option value="Risaralda">Risaralda</option>
+                                <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                                <option value="Santander">Santander</option>
+                                <option value="Sucre">Sucre</option>
+                                <option value="Tolima">Tolima</option>
+                                <option value="Valle del Cauca">Valle del Cauca</option>
+                                <option value="Vaupés">Vaupés</option>
+                                <option value="Vichada">Vichada</option>
+                            </select>
+                        </div>
+        
+                        <!-- Información adicional -->
+                        <div class="col-md-6 mb-3">
+                            <label for="GRADO" class="form-label">Grado</label>
+                            <select id="GRADO" name="GRADO" class="form-select" onchange="export_grado_m()" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="PARVULOS">PARVULOS</option>
+                                <option value="PREJARDÍN">PREJARDÍN</option>
+                                <option value="JARDÍN">JARDÍN</option>
+                                <option value="TRANSICIÓN">TRANSICIÓN</option>
+                                <option value="PRIMERO">PRIMERO</option>
+                                <option value="SEGUNDO">SEGUNDO</option>
+                                <option value="TERCERO">TERCERO</option>
+                                <option value="CUARTO">CUARTO</option>
+                                <option value="QUINTO">QUINTO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ULT_COLEGIO" class="form-label">Último Colegio</label>
+                            <input type="text" id="ULT_COLEGIO" name="ULT_COLEGIO" class="form-control">
+                        </div>
+        
+                        <!-- Estado del estudiante -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ESTADO_EST" class="form-label">Estado del Estudiante</label>
+                            <select id="ESTADO_EST" name="ESTADO_EST" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="Antiguo">Antiguo</option>
+                                <option value="Nuevo">Nuevo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="REP_EST" class="form-label">¿Es Repitente?</label>
+                            <select id="REP_EST" name="REP_EST" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="Sí">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+        
+                        <!-- Nuevos campos -->
+        
+                        <!-- EPS -->
+                        <div class="col-md-6 mb-3">
+                            <label for="EPS_EST" class="form-label">EPS Afiliado</label>
+                            <input type="text" id="EPS_EST" name="EPS_EST" class="form-control" placeholder="EPS del estudiante">
+                        </div>
+        
+                        <!-- Género -->
+                        <div class="col-md-6 mb-3">
+                            <label for="GENERO_EST" class="form-label">Género</label>
+                            <select id="GENERO_EST" name="GENERO" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                        </div>
+        
+                    </div>
+                </fieldset>
+
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Información Adicional del Estudiante</legend>
+                    <div class="row">
+                
+                        <!-- Año de Matrícula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ANIO_MATRICULA" class="form-label">Año de Matrícula</label>
+                            <input type="number" id="ANIO_MAT" name="ANIO_MAT" class="form-control" value="2025" readonly>
+                        </div>
+                
+                        <!-- Verificación Enfermedad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ENFERMEDAD_V" class="form-label">¿Tiene alguna enfermedad?</label>
+                            <select id="ENFERMEDAD_V" name="ENFERMEDAD_V" class="form-select" onchange="toggleEnfermedadField()" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="ENFERMEDAD" class="form-label">Descripción de Enfermedad</label>
+                            <input type="text" id="ENFERMEDAD" name="ENFERMEDAD" class="form-control" value="N/A" placeholder="Describa la enfermedad (si aplica)" readonly>
+                        </div>
+                
+                        <!-- Zona Residencial -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ZONA_R" class="form-label">Zona Residencial</label>
+                            <select id="ZONA_R" name="ZONA_R" class="form-select" required>
+                                <option value="N/A">Seleccione</option>
+                                <option value="URBANA">Urbana</option>
+                                <option value="RURAL">Rural</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Verificación Alergia -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ALERGIA_V" class="form-label">¿Tiene alguna alergia?</label>
+                            <select id="ALERGIA_V" name="ALERGIA_V" class="form-select" onchange="toggleAlergiaField()" required>
+                                <option value="N/A">Seleccione</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="ALERGIA" class="form-label">Descripción de Alergia</label>
+                            <input type="text" id="ALERGIA" name="ALERGIA" class="form-control" value="N/A"  placeholder="Describa la alergia (si aplica)" readonly>
+                        </div>
+                
+                        <!-- Discapacidad, Talento y Trastorno -->
+                        <div class="col-md-4 mb-3">
+                            <label for="DISCAPACIDAD" class="form-label">¿Tiene alguna discapacidad?</label>
+                            <select id="DISCAPACIDAD" name="DISCAPACIDAD" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="TALENTO" class="form-label">¿Tiene algún talento?</label>
+                            <select id="TALENTO" name="TALENTO" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="TRNSTRN" class="form-label">¿Tiene algún trastorno?</label>
+                            <select id="TRNSTRN" name="TRNSTRN" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="DESC_DSCP_TLNT_TRNS" class="form-label">Descripción de Talento, Discapacidad o Trastorno</label>
+                            <input type="text" id="DESC_DSCP_TLNT_TRNS" name="DESC_DSCP_TLNT_TRNS" value="N/A" class="form-control" placeholder="Describa si aplica alguna condición">
+                        </div>
+                
+                        
+                
+                    </div>
+                </fieldset>
+                
+
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Datos Personales de la Madre</legend>
+                    <div class="row">
+                        <!-- Nombre Completo de la Mamá -->
+                        <div class="col-md-6 mb-3">
+                            <label for="NOMBRE_MAMA" class="form-label">Nombre Completo</label>
+                            <input type="text" id="NOMBRE_MAMA" name="NOMBRE_MAMA" class="form-control" placeholder="Nombre completo de la mamá" required>
+                        </div>
+                
+                        <!-- Número de Cédula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CC_MAMA" class="form-label">No. Cédula</label>
+                            <input type="number" id="CC_MAMA" name="CC_MAMA" class="form-control" placeholder="Número de cédula" min="1" required>
+                        </div>
+                
+                        <!-- Número de Celular -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CEL_MAMA" class="form-label">Número de Celular</label>
+                            <input type="number" id="CEL_MAMA" name="CEL_MAMA" class="form-control" placeholder="Ej: 3001234567" min="1" required>
+                        </div>
+                
+                        <!-- Teléfono Oficina -->
+                        <div class="col-md-6 mb-3">
+                            <label for="TEL_OFIC_MAMA" class="form-label">Teléfono de Oficina</label>
+                            <input type="tel" id="TEL_OFIC_MAMA" name="TEL_OFIC_MAMA" class="form-control" placeholder="Teléfono de oficina">
+                        </div>
+                
+                        <!-- Correo Electrónico -->
+                        <div class="col-md-6 mb-3">
+                            <label for="EMAIL_MAMA" class="form-label">Correo Electrónico</label>
+                            <input type="email" id="EMAIL_MAMA" name="EMAIL_MAMA" class="form-control" placeholder="Correo electrónico" required>
+                        </div>
+                
+                        <!-- Dirección de Residencia -->
+                        <div class="col-md-6 mb-3">
+                            <label for="DIRECCION_MAMA" class="form-label">Dirección de Residencia</label>
+                            <input type="text" id="DIRECCION_MAMA" name="DIRECCION_MAMA" class="form-control" placeholder="Calle 123 #45-67" required>
+                        </div>
+                
+                        <!-- Lugar de Expedición de Cédula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="LUGAR_EXPEDICION_CC_MAMA" class="form-label">Lugar de Expedición de Cédula</label>
+                            <input type="text" id="LUGAR_EXPEDICION_CC_MAMA" name="LUGAR_EXPEDICION_CC_MAMA" class="form-control" placeholder="Ciudad y departamento">
+                        </div>
+                
+                        <!-- Ocupación Laboral -->
+                        <div class="col-md-6 mb-3">
+                            <label for="OCUPACION_MAMA" class="form-label">Ocupación Laboral</label>
+                            <input type="text" id="OCUPACION_MAMA" name="OCUPACION_MAMA" class="form-control" placeholder="Ocupación laboral de la mamá" required>
+                        </div>
+                
+                        <!-- Estudios de la Madre -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Estudios Realizados</label>
+
+                            <!-- Primaria -->
+                            <input type="hidden" name="M_P" value="NO"> <!-- Campo oculto -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="M_P" name="M_P" value="SI">
+                                <label class="form-check-label" for="M_P">Primaria</label>
+                            </div>
+
+                            <!-- Secundaria -->
+                            <input type="hidden" name="M_S" value="NO"> <!-- Campo oculto -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="M_S" name="M_S" value="SI">
+                                <label class="form-check-label" for="M_S">Secundaria</label>
+                            </div>
+
+                            <!-- Técnico -->
+                            <input type="hidden" name="M_T" value="NO"> <!-- Campo oculto -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="M_T" name="M_T" value="SI">
+                                <label class="form-check-label" for="M_T">Técnico</label>
+                            </div>
+
+                            <!-- Universitario -->
+                            <input type="hidden" name="M_U" value="NO"> <!-- Campo oculto -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="M_U" name="M_U" value="SI">
+                                <label class="form-check-label" for="M_U">Universitario</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </fieldset>
+                
+                
+
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Datos Personales del Padre</legend>
+                    <div class="row">
+                        <!-- Nombre Completo del Papá -->
+                        <div class="col-md-6 mb-3">
+                            <label for="NOMBRE_PAPA" class="form-label">Nombre Completo</label>
+                            <input type="text" id="NOMBRE_PAPA" name="NOMBRE_PAPA" class="form-control" placeholder="Nombre completo del papá" required>
+                        </div>
+                
+                        <!-- Número de Cédula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CC_PAPA" class="form-label">No. Cédula</label>
+                            <input type="number" id="CC_PAPA" name="CC_PAPA" class="form-control" placeholder="Número de cédula" min="1" required>
+                        </div>
+                
+                        <!-- Número de Celular -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CEL_PAPA" class="form-label">Número de Celular</label>
+                            <input type="number" id="CEL_PAPA" name="CEL_PAPA" class="form-control" placeholder="Ej: 3001234567" min="1" required>
+                        </div>
+                
+                        <!-- Teléfono Oficina -->
+                        <div class="col-md-6 mb-3">
+                            <label for="TEL_OFIC_PAPA" class="form-label">Teléfono de Oficina</label>
+                            <input type="tel" id="TEL_OFIC_PAPA" name="TEL_OFIC_PAPA" class="form-control" placeholder="Teléfono de oficina">
+                        </div>
+                
+                        <!-- Correo Electrónico -->
+                        <div class="col-md-6 mb-3">
+                            <label for="EMAIL_PAPA" class="form-label">Correo Electrónico</label>
+                            <input type="email" id="EMAIL_PAPA" name="EMAIL_PAPA" class="form-control" placeholder="Correo electrónico" required>
+                        </div>
+                
+                        <!-- Dirección de Residencia -->
+                        <div class="col-md-6 mb-3">
+                            <label for="DIRECCION_PAPA" class="form-label">Dirección de Residencia</label>
+                            <input type="text" id="DIRECCION_PAPA" name="DIRECCION_PAPA" class="form-control" placeholder="Calle 123 #45-67" required>
+                        </div>
+                
+                        <!-- Lugar de Expedición de Cédula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="LUGAR_EXPEDICION_CC_PAPA" class="form-label">Lugar de Expedición de Cédula</label>
+                            <input type="text" id="LUGAR_EXPEDICION_CC_PAPA" name="LUGAR_EXPEDICION_CC_PAPA" class="form-control" placeholder="Ciudad y departamento">
+                        </div>
+                
+                        <!-- Ocupación Laboral -->
+                        <div class="col-md-6 mb-3">
+                            <label for="OCUPACION_PAPA" class="form-label">Ocupación Laboral</label>
+                            <input type="text" id="OCUPACION_PAPA" name="OCUPACION_PAPA" class="form-control" placeholder="Ocupación laboral del papá" required>
+                        </div>
+                
+                        <!-- Estudios del Padre -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Estudios Realizados</label>
+
+                            <!-- Primaria -->
+                            <input type="hidden" name="P_P" value="NO">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="P_P" name="P_P" value="SI">
+                                <label class="form-check-label" for="P_P">Primaria</label>
+                            </div>
+
+                            <!-- Secundaria -->
+                            <input type="hidden" name="P_S" value="NO">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="P_S" name="P_S" value="SI">
+                                <label class="form-check-label" for="P_S">Secundaria</label>
+                            </div>
+
+                            <!-- Técnico -->
+                            <input type="hidden" name="P_T" value="NO">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="P_T" name="P_T" value="SI">
+                                <label class="form-check-label" for="P_T">Técnico</label>
+                            </div>
+
+                            <!-- Universitario -->
+                            <input type="hidden" name="P_U" value="NO">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="P_U" name="P_U" value="SI">
+                                <label class="form-check-label" for="P_U">Universitario</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </fieldset>
+                
+                <!-- Quién diligencia el documento -->
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Representante Diligenciando el Documento</legend>
+                    <div class="row">
+
+                        <!-- Selector para elegir el padre/madre -->
+                        <div class="col-md-6 mb-3">
+                            <label for="REPRESENTANTE" class="form-label">¿Quién diligencia el documento?</label>
+                            <select id="REPRESENTANTE" name="REPRESENTANTE" class="form-select" onchange="setRepresentanteData()" required>
+                                <option value="">Seleccione</option>
+                                <option value="PADRE">Padre</option>
+                                <option value="MADRE">Madre</option>
+                            </select>
+                        </div>
+
+                        <!-- Nombre del Representante -->
+                        <div class="col-md-6 mb-3">
+                            <label for="NOMBRE_REPRESENTA" class="form-label">Nombre del Representante</label>
+                            <input type="text" id="NOMBRE_REPRESENTA" name="NOMBRE_REPRESENTA" class="form-control" readonly>
+                        </div>
+
+                        <!-- Cédula del Representante -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CC_REPRESENTA" class="form-label">No. de Cédula del Representante</label>
+                            <input type="text" id="CC_REPRESENTA" name="CC_REPRESENTA" class="form-control" readonly>
+                        </div>
+                    </div>
+                </fieldset>
+
+
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Datos del Acudiente</legend>
+                    <div class="row">
+                        <!-- Nombre Completo del Acudiente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="NOMBRE_ACUDIENTE" class="form-label">Nombre Completo</label>
+                            <input type="text" id="NOMBRE_ACUDIENTE" name="NOMBRE_ACUDIENTE" class="form-control" placeholder="Nombre completo del acudiente" required>
+                        </div>
+                
+                        <!-- Número de Cédula del Acudiente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CC_ACUDIENTE" class="form-label">No. Cédula</label>
+                            <input type="number" id="CC_ACUDIENTE" name="CC_ACUDIENTE" class="form-control" placeholder="Número de cédula" min="1" required>
+                        </div>
+                
+                        <!-- Celular del Acudiente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="CELULAR_ACUDIENTE" class="form-label">Número de Celular</label>
+                            <input type="number" id="CELULAR_ACUDIENTE" name="CELULAR_ACUDIENTE" class="form-control" placeholder="Ej: 3001234567" min="1" required>
+                        </div>
+                
+                        <!-- Parentesco del Acudiente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="PRENTSC_ACUDIENTE" class="form-label">Parentesco</label>
+                            <select id="PRENTSC_ACUDIENTE" name="PRENTSC_ACUDIENTE" class="form-select" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option value="Padre">Padre</option>
+                                <option value="Madre">Madre</option>
+                                <option value="Tí@">Tío/Tía</option>
+                                <option value="Abuel@">Abuelo/Abuela</option>
+                                <option value="Herman@">Hermano/Hermana</option>
+                                <option value="Prim@">Primo/Prima</option>
+                                <option value="Padrin@">Primo/Prima</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <fieldset style="border-color: black; border-width: 1px; padding: 10px; margin-top: 30px;">
+                    <legend>Costos</legend>
+                    <div class="row">
+                
+                        <!-- Grado -->
+                        <div class="col-md-6 mb-3">
+                            <label for="grado_m" class="form-label">Grado</label>
+                            <input id="grado_m" type="text" readonly>
+                        </div>
+
+                        <!-- Botón para calcular costos -->
+                        <div class="col-md-6 mb-3 d-flex align-items-end justify-content-center">
+                            <button type="button" class="btn btn-primary w-100" onclick="cargarCostos()">Cargar Costos</button>
+                        </div>
+                
+                        <!-- Costo de Pensión -->
+                        <div class="col-md-6 mb-3">
+                            <label for="PENSION_VALOR" class="form-label">Valor de la Pensión</label>
+                            <input type="text" id="PENSION_VALOR" name="PENSION_VALOR" class="form-control" placeholder="Valor de la pensión" readonly>
+                        </div>
+                
+                        <!-- Costo de Matrícula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="COSTO_MATRICULA_VALOR" class="form-label">Valor de la Matrícula</label>
+                            <input type="text" id="COSTO_MATRICULA_VALOR" name="COSTO_MATRICULA_VALOR" class="form-control" placeholder="Valor de la matrícula" readonly>
+                        </div>
+                
+                        <!-- Costo Total -->
+                        <div class="col-md-6 mb-3">
+                            <label for="COSTO_TOTAL_VALOR" class="form-label">Costo Total</label>
+                            <input type="text" id="COSTO_TOTAL_VALOR" name="COSTO_TOTAL_VALOR" class="form-control" placeholder="Costo total" readonly>
+                        </div>
+                
+                        
+                
+                    </div>
+                </fieldset>
+                
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success w-25">Generar Formatos Word</button>
+                </div>
+
+                <div class="container mt-5">
+                    <h1>Archivos en la Carpeta: {{ folder_name }}</h1>
+                    <ul class="list-group">
+                        {% for file, link in files %}
+                        <li class="list-group-item">
+                            <a href="{{ link }}" target="_blank">{{ file }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="/" class="btn btn-primary mt-3">Regresar</a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+    <script src="/static/js/scripts.js"></script>
+    
+    </body>
+</html>

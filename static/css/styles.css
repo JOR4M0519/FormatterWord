@@ -1,0 +1,58 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+label, input, select {
+    display: block;
+    margin-bottom: 10px;
+}
+input:disabled {
+    background-color: #f0f0f0;
+}
+
+h1.text-center {
+    font-size: 36px;                /* Tamaño de fuente grande */
+    font-weight: bold;              /* Negrita para el título */
+    color: #434343;                 /* Color oscuro para un contraste elegante */
+    text-transform: uppercase;      /* Poner el texto en mayúsculas */
+    letter-spacing: 2px;            /* Espaciado entre letras para darle amplitud */
+    text-align: center;             /* Centrar el texto */
+    margin-bottom: 1.5rem;          /* Espacio debajo del título (ajustable) */
+    font-family: 'Arial', sans-serif; /* Fuente moderna y limpia */
+    padding: 10px 0;                /* Espaciado arriba y abajo del título */
+    background-color: #ecf0f1;      /* Fondo suave */
+    border-radius: 8px;             /* Bordes redondeados */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil para destacar */
+}
+
+h1.text-center:hover {
+    color: #dbbd00;                 /* Cambiar el color del texto al pasar el ratón */
+    cursor: pointer;               /* Cambiar el cursor para indicar que es interactivo */
+}
+
+
+fieldset {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+legend {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+input[readonly] {
+    background-color: #f0f0f0;  /* Color de fondo gris claro */
+    color: #555;                /* Color de texto gris */
+    border: 1px solid #ccc;     /* Borde gris */
+    cursor: not-allowed;        /* Cambiar el cursor a 'no permitido' */
+    padding: 5px 10px;          /* Espaciado dentro del input */
+    font-style: italic;         /* Texto en cursiva */
+}
+
+input[readonly]:hover {
+    background-color: #e0e0e0;  /* Cambiar el fondo a un gris más oscuro al pasar el ratón */
+}
+
