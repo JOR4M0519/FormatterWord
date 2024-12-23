@@ -1,39 +1,68 @@
 
 document.getElementById("DATAFORM").addEventListener("submit", async (event) => {
     event.preventDefault(); // Evita el envío automático del formulario
-
-    // Obtener los datos del formulario
-    const formData = new FormData(event.target);
-
-    // Convertir los datos del formulario en un objeto JSON
-    const data = {};
-    formData.forEach((value, key) => {
-        // Transformar la clave al formato {{key}}
-        data[`{{${key}}}`] = value.toUpperCase();
-    });
     
+    var formData;
+
+    try {
+        // Mostrar el spinner mientras se hace la solicitud
+        document.getElementById("modal").style.display = "flex";
+
+        // Obtener los datos del formulario
+        formData = new FormData(event.target);
+
+        const data = {};
+        formData.forEach((value, key) => {
+            // Solo procesamos los campos de texto, no los archivos
+            if (value instanceof File) {
+                // Aquí no aplicamos `toUpperCase()` a los archivos, solo los dejamos tal cual
+                data[key] = value;  // Los archivos se mantienen tal cual en el FormData
+            } else {
+                // Aplicamos `toUpperCase()` solo a los valores de texto
+                data[key] = value.toUpperCase();
+            }
+        });
+
+
+    } catch (error) {
+        mostrarModal("Error Web","Hubo un problema al generar los documentos. Inténtalo nuevamente.","error");
+        document.getElementById("modal").style.display = "none";
+        console.error(error);
+    }
     // Enviar los datos al backend
     try {
         const response = await fetch("/generate_words", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams(data),
+            //headers: {"Content-Type": "application/x-www-form-urlencoded",},
+            //body: new URLSearchParams(data),
+            body: formData,
         });
+
+        // Ocultar el spinner
+        document.getElementById("modal").style.display = "none";
 
         if (response.ok) {
             const result = await response.json();
             mostrarModal("Se rellenaron correctamente todos los campos",result.message,"success");
+
+            // Extraer el nombre de la carpeta de los resultados de la respuesta
+            const folderName = result.output_folder;  // Asegúrate de que el servidor te pase esta información
+
+            // Abrir la vista previa en una nueva ventana (usar window.open)
+            window.open(`/preview/${folderName}`, "_blank");
+
         } else {
             const error = await response.json();
+            document.getElementById("modal").style.display = "none";
             mostrarModal("Error","Error: " + error.error, "error");
         }
     } catch (error) {
         mostrarModal("Error","Hubo un problema al generar los documentos. Inténtalo nuevamente.","error");
+        document.getElementById("modal").style.display = "none";
         console.error(error);
     }
 });
+
 
 
 function mostrarModal(titulo, mensaje, tipo = 'info') {
@@ -119,7 +148,7 @@ function toggleAlergiaField() {
         alergiaInput.value = "";
         alergiaInput.readOnly  = false;   // Habilita el campo
     } else {
-        alergiaInput.value = "N/A";
+        alergiaInput.value = "NA";
         alergiaInput.readOnly  = true;   // Deshabilita el campo
     }
 }
@@ -134,7 +163,7 @@ function toggleEnfermedadField() {
         enfermedadInput.value = "";
         enfermedadInput.readOnly  = false;  // Habilita el campo
     } else {
-        enfermedadInput.value = "N/A";
+        enfermedadInput.value = "NA";
         enfermedadInput.readOnly  = true;   // Deshabilita el campo
     }
 }
@@ -167,6 +196,236 @@ function setRepresentanteData() {
     }
 }
 
+function export_grado_m(){
+        document.getElementById("grado_m").value = document.getElementById("GRADO").value; 
+    }
+
+function cargarCostos() {
+    const grado = document.getElementById("GRADO").value;
+
+    // Costos por Grado
+    const pensionValores = {
+        "PARVULOS": 3000000,
+        "PREJARDÍN": 3800000,
+        "JARDÍN": 3800000,
+        "TRANSICIÓN": 3800000,
+        "PRIMERO": 4100000,
+        "SEGUNDO": 4100000,
+        "TERCERO": 4100000,
+        "CUARTO": 3225000,
+        "QUINTO": 3225000
+    };
+
+    const matriculaValores = {
+        "PARVULOS": 450000,
+        "PREJARDÍN": 750000,
+        "JARDÍN": 720650,
+        "TRANSICIÓN": 693000,
+        "PRIMERO": 657300,
+        "SEGUNDO": 657300,
+        "TERCERO": 657300,
+        "CUARTO": 508300,
+        "QUINTO": 508300
+    };
+
+    if (grado && pensionValores[grado] && matriculaValores[grado]) {
+        // Asignar valores automáticamente
+        const pension = pensionValores[grado];
+        const matricula = matriculaValores[grado];
+        const total = pension + matricula;
+
+        document.getElementById("PENSION_VALOR").value = pension.toLocaleString();
+        document.getElementById("COSTO_MATRICULA_VALOR").value = matricula.toLocaleString();
+        document.getElementById("COSTO_TOTAL_VALOR").value = total.toLocaleString();
+
+    } else {
+        mostrarModal("Alerta","Por favor selecciona un grado válido.","warning");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Referencia al checkbox "Padre No Presente"
+    const padreNoPresenteCheckbox = document.getElementById("padre_no_presente");
+    
+    // Función para actualizar los campos cuando el padre no está presente
+    function togglePadreFields() {
+        // Seleccionamos los inputs que necesitan ser modificados
+        const fields = [
+            "NOMBRE_PAPA", "CC_PAPA", "CEL_PAPA", "TEL_OFIC_PAPA", "EMAIL_PAPA", "DIRECCION_PAPA",
+            "LUGAR_EXPEDICION_CC_PAPA", "OCUPACION_PAPA", "TIPO_DOC_PAPA", "LUGAR_NACIMIENTO_PAPA",
+            "ESTADO_CIVIL_PAPA", "FECHA_NACIMIENTO_PAPA", "REGMEN_FISCAL_PAPA", "RESPONSABILIDAD_FISCAL_PAPA",
+            "EMPRESA_PAPA", "DIRECCION_LABORAL_PAPA", "CARGO_PAPA", "P_P", "P_S", "P_T", "P_U"
+        ];
+
+       
+
+        // Función para restaurar los campos a su estado original
+        function enableField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.readOnly = false;
+                if (field.type !== "checkbox") {
+                    field.value = ""; // Limpiamos el valor
+                }
+            }
+        }
+
+        // Si el checkbox está marcado, deshabilitamos y configuramos los campos
+        if (padreNoPresenteCheckbox.checked) {
+            // Cambiar todos los campos a "NA" y deshabilitarlos
+            fields.forEach(fieldId => {
+                readOnlyAndSetFieldToNA(fieldId);
+            });
+
+            // Cambiar los tipos de inputs a "text" para permitir "NA" en lugar de valores numéricos o de correo
+            const fieldsToChangeType = [
+                "EMAIL_PAPA", "TEL_OFIC_PAPA", "CC_PAPA", "CEL_PAPA", "FECHA_NACIMIENTO_PAPA"
+            ];
+            fieldsToChangeType.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.type = "text"; // Cambiar el tipo de los campos problemáticos
+                }
+            });
+        } else {
+            // Restaurar los campos a su estado original
+            fields.forEach(fieldId => {
+                enableField(fieldId);
+            });
+
+            // Restaurar los tipos originales de los inputs
+            const fieldsToRestoreType = [
+                "EMAIL_PAPA", "TEL_OFIC_PAPA", "CC_PAPA", "CEL_PAPA", "FECHA_NACIMIENTO_PAPA"
+            ];
+            fieldsToRestoreType.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    // Restauramos los tipos según corresponda
+                    if (fieldId === "EMAIL_PAPA") field.type = "email";
+                    else if (fieldId === "TEL_OFIC_PAPA") field.type = "tel";
+                    else if (fieldId === "CC_PAPA" || fieldId === "CEL_PAPA") field.type = "number";
+                    else if (fieldId === "FECHA_NACIMIENTO_PAPA") field.type = "date";
+                }
+            });
+        }
+
+        function readOnlyAndSetFieldToNA(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                // Si el campo es un input de tipo "checkbox", lo desmarcamos
+                if (field.type === "checkbox") {
+                    field.checked = false;
+                } else if (field.type === "number" || field.type === "date") {
+                    field.type = "text";
+                    field.value = "NA";
+                } else {
+                    // Para otros tipos de campo, llenamos con "NA"
+                    field.value = "NA";
+                }
+                field.readOnly = true;
+            }
+        }
+
+    }
+
+    // Llamamos a la función cuando el checkbox cambie
+    padreNoPresenteCheckbox.addEventListener("change", togglePadreFields);
+
+    // Ejecutar la función al cargar la página para asegurarse de que los campos estén correctamente configurados
+    togglePadreFields();
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Referencia al checkbox "Madre No Presente"
+    const madreNoPresenteCheckbox = document.getElementById("madre_no_presente");
+    
+    // Función para actualizar los campos cuando la madre no está presente
+    function toggleMadreFields() {
+        // Seleccionamos los inputs que necesitan ser modificados
+        const fields = [
+            "NOMBRE_MAMA", "CC_MAMA", "CEL_MAMA", "TEL_OFIC_MAMA", "EMAIL_MAMA", "DIRECCION_MAMA",
+            "LUGAR_EXPEDICION_CC_MAMA", "OCUPACION_MAMA", "TIPO_DOC_MAMA", "LUGAR_NACIMIENTO_MAMA",
+            "ESTADO_CIVIL_MAMA", "FECHA_NACIMIENTO_MAMA", "REGMEN_FISCAL_MAMA", "RESPONSABILIDAD_FISCAL_MAMA",
+            "EMPRESA_MAMA", "DIRECCION_LABORAL_MAMA", "CARGO_MAMA", "M_P", "M_S", "M_T", "M_U"
+        ];
+
+        
+
+        // Función para restaurar los campos a su estado original
+        function enableField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.readOnly = false;
+                if (field.type !== "checkbox") {
+                    field.value = ""; // Limpiamos el valor
+                }
+            }
+        }
+
+        // Si el checkbox está marcado, deshabilitamos y configuramos los campos
+        if (madreNoPresenteCheckbox.checked) {
+            // Cambiar todos los campos a "NA" y deshabilitarlos
+            fields.forEach(fieldId => {
+                readOnlyAndSetFieldToNA(fieldId);
+            });
+
+            // Cambiar los tipos de inputs a "text" para permitir "NA" en lugar de valores numéricos o de correo
+            const fieldsToChangeType = [
+                "EMAIL_MAMA", "TEL_OFIC_MAMA", "CC_MAMA", "CEL_MAMA", "FECHA_NACIMIENTO_MAMA"
+            ];
+            fieldsToChangeType.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.type = "text"; // Cambiar el tipo de los campos problemáticos
+                }
+            });
+        } else {
+            // Restaurar los campos a su estado original
+            fields.forEach(fieldId => {
+                enableField(fieldId);
+            });
+
+            // Restaurar los tipos originales de los inputs
+            const fieldsToRestoreType = [
+                "EMAIL_MAMA", "TEL_OFIC_MAMA", "CC_MAMA", "CEL_MAMA", "FECHA_NACIMIENTO_MAMA"
+            ];
+            fieldsToRestoreType.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    // Restauramos los tipos según corresponda
+                    if (fieldId === "EMAIL_MAMA") field.type = "email";
+                    else if (fieldId === "TEL_OFIC_MAMA") field.type = "tel";
+                    else if (fieldId === "CC_MAMA" || fieldId === "CEL_MAMA") field.type = "number";
+                    else if (fieldId === "FECHA_NACIMIENTO_MAMA") field.type = "date";
+                }
+            });
+        }
+
+        function readOnlyAndSetFieldToNA(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                // Si el campo es un input de tipo "checkbox", lo desmarcamos
+                if (field.type === "checkbox") {
+                    field.checked = false;
+                } else if (field.type === "number" || field.type === "date") {
+                    // Si el campo es de tipo "number" o "date", lo dejamos vacío en lugar de asignar "NA"
+                    field.type = "text";
+                    field.value = "NA"; // Limpiamos el valor
+                } else {
+                    // Para otros tipos de campo, llenamos con "NA"
+                    field.value = "NA";
+                }
+                field.readOnly = true;
+            }
+        }
+    }
+
+    // Llamamos a la función cuando el checkbox cambie
+    madreNoPresenteCheckbox.addEventListener("change", toggleMadreFields);
+
+    // Ejecutar la función al cargar la página para asegurarse de que los campos estén correctamente configurados
+    toggleMadreFields();
+});
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -189,53 +448,5 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("DIA_LETRA").value = convertirNumeroALetras(diaActual);
 
 
-
-    function export_grado_m(){
-        document.getElementById("grado_m").value = document.getElementById("GRADO").value; 
-    }
-
-    function cargarCostos() {
-        const grado = document.getElementById("GRADO").value;
-
-        // Costos por Grado
-        const pensionValores = {
-            "PARVULOS": 3000000,
-            "PREJARDÍN": 3800000,
-            "JARDÍN": 3800000,
-            "TRANSICIÓN": 3800000,
-            "PRIMERO": 4100000,
-            "SEGUNDO": 4100000,
-            "TERCERO": 4100000,
-            "CUARTO": 3225000,
-            "QUINTO": 3225000
-        };
-
-        const matriculaValores = {
-            "PARVULOS": 450000,
-            "PREJARDÍN": 750000,
-            "JARDÍN": 720650,
-            "TRANSICIÓN": 693000,
-            "PRIMERO": 657300,
-            "SEGUNDO": 657300,
-            "TERCERO": 657300,
-            "CUARTO": 508300,
-            "QUINTO": 508300
-        };
-
-        if (grado && pensionValores[grado] && matriculaValores[grado]) {
-            // Asignar valores automáticamente
-            const pension = pensionValores[grado];
-            const matricula = matriculaValores[grado];
-            const total = pension + matricula;
-
-            document.getElementById("PENSION_VALOR").value = pension.toLocaleString();
-            document.getElementById("COSTO_MATRICULA_VALOR").value = matricula.toLocaleString();
-            document.getElementById("COSTO_TOTAL_VALOR").value = total.toLocaleString();
-
-        } else {
-            mostrarModal("Alerta","Por favor selecciona un grado válido.","warning");
-        }
-    }
-    
 
 });

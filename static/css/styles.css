@@ -56,3 +56,32 @@ input[readonly]:hover {
     background-color: #e0e0e0;  /* Cambiar el fondo a un gris más oscuro al pasar el ratón */
 }
 
+ /* Estilos para el modal */
+ #modal {
+    display: none;  /* Inicialmente oculto */
+    position: fixed;  /* Posicionamiento fijo para cubrir toda la pantalla */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);  /* Fondo semitransparente */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;  /* Asegurarse de que esté por encima de otros elementos */
+}
+
+/* Spinner dentro del modal */
+#spinner {
+    border: 8px solid #f3f3f3; /* Fondo */
+    border-top: 8px solid #3498db; /* Color del spinner */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+}
+
+/* Animación de giro */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
