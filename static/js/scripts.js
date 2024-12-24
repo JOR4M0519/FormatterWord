@@ -1,8 +1,25 @@
 
+let isFormDirty = false;
+
+// Detectar si se han realizado cambios en el formulario
+document.getElementById("DATAFORM").addEventListener("input", () => {
+    isFormDirty = true;
+});
+
+window.addEventListener("beforeunload", (event) => {
+    if (isFormDirty) {
+        // Personalizar el mensaje no funciona en todos los navegadores modernos,
+        // pero este evento asegura que el cuadro de confirmación se muestre.
+        event.preventDefault();
+        event.returnValue = ""; // Esto muestra el mensaje genérico del navegador.
+    }
+});
+
 document.getElementById("DATAFORM").addEventListener("submit", async (event) => {
     event.preventDefault(); // Evita el envío automático del formulario
     
     var formData;
+    var data = new FormData();
 
     try {
         // Mostrar el spinner mientras se hace la solicitud
@@ -11,22 +28,20 @@ document.getElementById("DATAFORM").addEventListener("submit", async (event) => 
         // Obtener los datos del formulario
         formData = new FormData(event.target);
 
-        const data = {};
+        
         formData.forEach((value, key) => {
-            // Solo procesamos los campos de texto, no los archivos
             if (value instanceof File) {
-                // Aquí no aplicamos `toUpperCase()` a los archivos, solo los dejamos tal cual
-                data[key] = value;  // Los archivos se mantienen tal cual en el FormData
+                data.append(key, value); // Archivos sin cambios
             } else {
-                // Aplicamos `toUpperCase()` solo a los valores de texto
-                data[key] = value.toUpperCase();
+                data.append(`{{${key}}}`, value.toUpperCase()); // Campos de texto en mayúsculas
             }
         });
+        
 
 
     } catch (error) {
-        mostrarModal("Error Web","Hubo un problema al generar los documentos. Inténtalo nuevamente.","error");
         document.getElementById("modal").style.display = "none";
+        mostrarModal("Error Web","Hubo un problema al generar los documentos. Inténtalo nuevamente.","error");
         console.error(error);
     }
     // Enviar los datos al backend
@@ -35,33 +50,53 @@ document.getElementById("DATAFORM").addEventListener("submit", async (event) => 
             method: "POST",
             //headers: {"Content-Type": "application/x-www-form-urlencoded",},
             //body: new URLSearchParams(data),
-            body: formData,
+            body: data,
         });
-
         // Ocultar el spinner
         document.getElementById("modal").style.display = "none";
-
-        if (response.ok) {
-            const result = await response.json();
-            mostrarModal("Se rellenaron correctamente todos los campos",result.message,"success");
-
-            // Extraer el nombre de la carpeta de los resultados de la respuesta
-            const folderName = result.output_folder;  // Asegúrate de que el servidor te pase esta información
-
-            // Abrir la vista previa en una nueva ventana (usar window.open)
-            window.open(`/preview/${folderName}`, "_blank");
-
-        } else {
-            const error = await response.json();
-            document.getElementById("modal").style.display = "none";
-            mostrarModal("Error","Error: " + error.error, "error");
-        }
+        redirectFolder(response)
     } catch (error) {
         mostrarModal("Error","Hubo un problema al generar los documentos. Inténtalo nuevamente.","error");
         document.getElementById("modal").style.display = "none";
         console.error(error);
     }
 });
+
+async function redirectFolder(response) {
+    try {
+        // Verificar si la respuesta fue exitosa
+        if (!response.ok) {
+            console.error("Error en la respuesta:", response.status);
+            mostrarModal("Error", "Error en la respuesta del servidor.", "error");
+            return;
+        }
+
+        // Parsear la respuesta JSON
+        let result = await response.json();
+
+        // Verificar si la respuesta fue exitosa
+        if (result.success) {
+            const folderName = result.output_folder;
+
+
+            // Verificar si folderName es válido
+            if (folderName) {
+                window.open(`/preview/${folderName}`, "_blank");
+            } else {
+                console.error("folderName no está definido.");
+                mostrarModal("Error", "No se encontró la carpeta.", "error");
+            }
+        } else {
+            console.error("Error en la respuesta:", result.error || "Error desconocido");
+            mostrarModal("Error", "Error: " + (result.error || "Ocurrió un error inesperado"), "error");
+        }
+    } catch (error) {
+        // Manejo de errores al parsear o realizar cualquier operación
+        console.error("Error al procesar la respuesta o abrir la carpeta:", error);
+        mostrarModal("Error", "Hubo un problema al procesar la respuesta. Inténtalo nuevamente.", "error");
+    }
+}
+
 
 
 

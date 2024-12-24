@@ -1,2 +1,0 @@
-python addImage.py
-pause

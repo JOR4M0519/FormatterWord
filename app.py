@@ -1,26 +1,33 @@
+# Importaciones estándar de Python
+import os
+from concurrent.futures import ThreadPoolExecutor
+
+# Importaciones de librerías de terceros
 from flask import Flask, request, jsonify, render_template, send_file, url_for
+import pandas as pd
+from werkzeug.utils import secure_filename
+from filelock import FileLock, Timeout
+
+# Importaciones específicas para trabajar con documentos y PDFs
+from docx import Document
+from docx.shared import RGBColor
+from docx2pdf import convert
 from pdfrw import PdfReader, PdfWriter, PageMerge
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
-from pdfrw import PdfReader
-from docx import Document
-import pandas as pd
-from filelock import FileLock, Timeout
-from docx2pdf import convert
-import os
-from reportlab.pdfgen import canvas
+
+# Importaciones específicas para trabajar con Windows
 import pythoncom
-from concurrent.futures import ThreadPoolExecutor
-import win32com.client as win32 
-from werkzeug.utils import secure_filename
+import win32com.client as win32
+
 
 app = Flask(__name__)
 
 # Carpetas para almacenar documentos
 UPLOAD_FOLDER = "templates_word"  # Carpeta con las plantillas
-OUTPUT_FOLDER = "output_word"     # Carpeta con los documentos generados
-EXCEL_FILE = "output_word/data_global.xlsx"  # Archivo Excel global compartido
-EXCEL_LOCK_FILE = "output_word/data_global.lock"  # Archivo de bloqueo para el Excel
+OUTPUT_FOLDER = "output"     # Carpeta con los documentos generados
+EXCEL_FILE = "output/data_global.xlsx"  # Archivo Excel global compartido
+EXCEL_LOCK_FILE = "output/data_global.lock"  # Archivo de bloqueo para el Excel
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -29,32 +36,13 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Limitar tamaño de archivo a 16 MB
 executor = ThreadPoolExecutor(max_workers=2)
 
-def replace_and_underline_text(paragraph, field, value, table):
+def replace_and_underline_text(paragraph, field, value):
     """
-    Reemplaza un campo específico en un párrafo, manteniendo el formato original y aplicando subrayado solo al texto reemplazado.
+    Reemplaza un campo específico en un párrafo, sin preocuparse por el formato original.
     """
-    runs = paragraph.runs
-    full_text = "".join(run.text for run in runs)  # Combinar texto completo del párrafo
-
-    # Si el campo existe en el texto completo
-    if field in full_text:
-        new_text = full_text.replace(field, value)  # Reemplazar el campo con el valor
-
-        # Limpiar los "runs" existentes
-        for run in runs:
-            run.text = ""
-
-        # Reconstruir los "runs" con el texto reemplazado y aplicar formato
-        for word in new_text.split():
-            new_run = paragraph.add_run(f"{word} ")
-            if value in word:  # Si es el texto reemplazado, aplicar subrayado
-                if not table:    
-                    new_run.font.underline = True
-            else:  # Mantener el formato original para el resto del texto
-                new_run.font.name = runs[0].font.name
-                new_run.font.size = runs[0].font.size
-                new_run.font.bold = runs[0].font.bold
-                new_run.font.italic = runs[0].font.italic
+    if field in paragraph.text:
+        # Reemplazar el texto directamente
+        paragraph.text = paragraph.text.replace(field, value)
 
 def replace_fields_in_table(table, data):
     """
@@ -64,7 +52,7 @@ def replace_fields_in_table(table, data):
         for cell in row.cells:
             for paragraph in cell.paragraphs:
                 for field, value in data.items():
-                    replace_and_underline_text(paragraph, field, value, True)
+                    replace_and_underline_text(paragraph, field, value)
 
 def wait_for_excel_lock(lock_path, timeout=10):
     """
@@ -124,7 +112,7 @@ def process_word_generation(data, student_folder):
 
             for paragraph in doc.paragraphs:
                 for field, value in data.items():
-                    replace_and_underline_text(paragraph, field, value, False)
+                    replace_and_underline_text(paragraph, field, value)
 
             for table in doc.tables:
                 replace_fields_in_table(table, data)
@@ -137,7 +125,6 @@ def process_word_generation(data, student_folder):
         print(f"Formatos generados correctamente en la carpeta: {student_folder}")
         
         #return jsonify({"success": True, "message": "Formatos generados correctamente.", "output_folder": student_folder})
-
     except Exception as e:
         print(f"Error al generar documentos: {e}")
         #return jsonify({"error": "Error al generar documentos."}), 500
@@ -169,35 +156,29 @@ def merge_image_with_pdf(base_pdf_path, overlay_pdf_path, output_pdf_path):
         PageMerge(base_page).add(overlay_page).render()
 
     PdfWriter(output_pdf_path, trailer=base_pdf).write()
-    os.remove(overlay_pdf_path)  # Eliminar el archivo temporal
 
-def generate_and_add_image_to_pdf(student_folder, image_path):
+
+def generate_and_add_image_to_pdf(student_folder, image_path,pdf_image_path):
     """Genera documentos PDF y agrega una imagen a cada uno."""
-    docx_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(".docx")]
-    if not docx_files:
-        raise FileNotFoundError("No hay archivos Word en la carpeta seleccionada.")
+
     
-    for filename in docx_files:
-        # Aquí debes generar el PDF a partir de los archivos .docx (si es necesario)
-        pdf_output_path = os.path.join(student_folder, f"output_{filename.replace('.docx', '.pdf')}")
-        
-        # Después de generar el PDF, añadir la imagen
-        page_width, page_height = get_pdf_page_size(pdf_output_path)
+    # Después de generar el PDF, añadir la imagen
+    page_width, page_height = get_pdf_page_size(pdf_image_path)
 
-        # Definir dimensiones máximas de la imagen
-        max_width = 105
-        max_height = (max_width / 3 * 4)
+    # Definir dimensiones máximas de la imagen
+    max_width = 105
+    max_height = (max_width / 3 * 4)
 
-        # Crear el overlay de la imagen
-        overlay_pdf_path = os.path.join(student_folder, "overlay_temp.pdf")
-        create_image_overlay(overlay_pdf_path, image_path, x=457, y=755, max_width=max_width, max_height=max_height,
-                             page_width=page_width, page_height=page_height)
+    # Crear el overlay de la imagen
+    overlay_pdf_path = os.path.join(student_folder, "overlay_temp.pdf")
+    create_image_overlay(overlay_pdf_path, image_path, x=457, y=755, max_width=max_width, max_height=max_height,
+                            page_width=page_width, page_height=page_height)
 
-        # Combinar el PDF original con la imagen
-        merge_image_with_pdf(pdf_output_path, overlay_pdf_path, pdf_output_path)
+    # Combinar el PDF original con la imagen
+    merge_image_with_pdf(pdf_image_path, overlay_pdf_path, pdf_image_path)
 
-        # Eliminar la imagen temporal después de agregarla
-        os.remove(overlay_pdf_path)
+    # Eliminar la imagen temporal después de agregarla
+    os.remove(overlay_pdf_path)
 
 
 @app.route("/")
@@ -209,15 +190,6 @@ def generate_words():
     try:
         # Obtener datos fijos del formulario
         data = request.form.to_dict()
-
-        # Obtener archivo de imagen
-        file = request.files.get('file')
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(OUTPUT_FOLDER, filename)
-            file.save(file_path)
-        else:
-            return jsonify({"error": "Archivo de imagen no válido o no enviado."}), 400
 
 
         # Obtener datos clave para el nombre de la carpeta
@@ -231,6 +203,18 @@ def generate_words():
         # Crear la carpeta específica para el estudiante
         student_folder = os.path.join(OUTPUT_FOLDER, folder_name)
         os.makedirs(student_folder, exist_ok=True)
+        
+        
+        # Obtener archivo de imagen
+        file = request.files.get('file')
+        name, ext = os.path.splitext(file.filename)
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(f"{folder_name}{ext}")
+            img_path = os.path.join(student_folder, filename)
+            file.save(img_path)
+        else:
+            return jsonify({"error": "Archivo de imagen no válido o no enviado."}), 400
 
         # Exportar datos a Excel
         save_to_excel(data)
@@ -240,11 +224,11 @@ def generate_words():
 
         # Esperamos a que la generación de documentos termine
         future.result()  # Esto bloqueará el hilo actual hasta que el proceso termine
-
         # Ahora que los documentos están generados, añadimos la imagen
-        generate_and_add_image_to_pdf(student_folder, file_path)
+        pdf_image_path = os.path.join(student_folder, "output_F03. MATRICULA.pdf")
+        generate_and_add_image_to_pdf(student_folder, img_path,pdf_image_path)
 
-        return jsonify({"success": True, "message": "Proceso iniciado. Espera mientras generamos los documentos."})
+        return jsonify({"success": True, "message": "Proceso iniciado. Espera mientras generamos los documentos.","output_folder": folder_name})
     except Exception as e:
         print(f"Error al procesar la solicitud: {e}")
         return jsonify({"error": "Error al procesar la solicitud."}), 500
