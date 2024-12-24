@@ -1,6 +1,7 @@
-# Generador de Matrículas PDF
+# Generador de Matrículas Formulario a PDF
+Se digitaliza el diligenciamiento de los formularios a través del cargue de los formatos en word a través de palabras claves en formato de doble corchete para su remplazo en el servidor backend en flask y conversión de pdf con la aplicación de la imagen del estudiante y visualziación de los documentos generados.
 
-N/A
+
 ---
 
 ## **Requisitos Previos**
