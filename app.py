@@ -209,7 +209,7 @@ def generate_words():
         file = request.files.get('file')
         name, ext = os.path.splitext(file.filename)
         
-        default_image_path='static\img\3x4.jpg'
+        default_image_path = 'static/img/3x4.jpg'
 
         if file and allowed_file(file.filename):
             # Si el archivo es válido, lo guardamos
