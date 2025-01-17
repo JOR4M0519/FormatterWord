@@ -209,12 +209,16 @@ def generate_words():
         file = request.files.get('file')
         name, ext = os.path.splitext(file.filename)
         
+        default_image_path='static\img\3x4.jpg'
+
         if file and allowed_file(file.filename):
+            # Si el archivo es válido, lo guardamos
             filename = secure_filename(f"{folder_name}{ext}")
             img_path = os.path.join(student_folder, filename)
             file.save(img_path)
         else:
-            return jsonify({"error": "Archivo de imagen no válido o no enviado."}), 400
+            # Si no se carga un archivo válido, se utiliza la imagen por defecto
+            img_path = default_image_path
 
         # Exportar datos a Excel
         save_to_excel(data)
