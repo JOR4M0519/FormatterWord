@@ -36,13 +36,56 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Limitar tamaño de archivo a 16 MB
 executor = ThreadPoolExecutor(max_workers=2)
 
-def replace_and_underline_text(paragraph, field, value):
+def replace_and_underline_text(paragraph, field, value, table):
     """
-    Reemplaza un campo específico en un párrafo, sin preocuparse por el formato original.
+    Reemplaza un campo específico en un párrafo, manteniendo el formato original y aplicando subrayado solo al texto reemplazado.
     """
-    if field in paragraph.text:
-        # Reemplazar el texto directamente
-        paragraph.text = paragraph.text.replace(field, value)
+    runs = paragraph.runs
+    full_text = "".join(run.text for run in runs)  # Combinar texto completo del párrafo
+
+    # Si el campo existe en el texto completo
+    if field in full_text:
+        new_text = full_text.replace(field, value)  # Reemplazar el campo con el valor
+
+        # Limpiar los "runs" existentes
+        for run in runs:
+            run.text = ""  # Borramos el texto de cada run
+
+        # Crear el nuevo texto manteniendo el formato de los runs
+        current_run = None
+        remaining_text = new_text
+        for run in runs:
+            # Si hay texto para agregar al run, lo agregamos con el formato adecuado
+            if remaining_text:
+                part = remaining_text[:len(run.text)]  # Tomamos el texto de acuerdo a la longitud del run
+                remaining_text = remaining_text[len(part):]  # Quitamos esa parte del texto
+
+                run.text = part  # Asignamos el texto modificado al run
+                run.font.name = runs[0].font.name
+                run.font.size = runs[0].font.size
+                run.font.bold = runs[0].font.bold
+                run.font.italic = runs[0].font.italic
+                run.font.underline = runs[0].font.underline
+
+                # Si estamos reemplazando texto, le aplicamos subrayado
+                if value in part:
+                    if not table:
+                        run.font.underline = False
+
+            else:
+                run.text = ""  # Si no queda texto, borramos el run
+
+        # Si todavía queda texto, añadirlo a un nuevo run
+        if remaining_text:
+            new_run = paragraph.add_run(remaining_text)
+            new_run.font.name = runs[0].font.name
+            new_run.font.size = runs[0].font.size
+            new_run.font.bold = runs[0].font.bold
+            new_run.font.italic = runs[0].font.italic
+            if value in remaining_text:  # Si es el texto reemplazado, aplicar subrayado
+                if not table:
+                    new_run.font.underline = False
+
 
 def replace_fields_in_table(table, data):
     """
@@ -52,7 +95,7 @@ def replace_fields_in_table(table, data):
         for cell in row.cells:
             for paragraph in cell.paragraphs:
                 for field, value in data.items():
-                    replace_and_underline_text(paragraph, field, value)
+                    replace_and_underline_text(paragraph, field, value, True)
 
 def wait_for_excel_lock(lock_path, timeout=10):
     """
@@ -112,7 +155,7 @@ def process_word_generation(data, student_folder):
 
             for paragraph in doc.paragraphs:
                 for field, value in data.items():
-                    replace_and_underline_text(paragraph, field, value)
+                    replace_and_underline_text(paragraph, field, value, False)
 
             for table in doc.tables:
                 replace_fields_in_table(table, data)

@@ -33,11 +33,21 @@ document.getElementById("DATAFORM").addEventListener("submit", async (event) => 
             if (value instanceof File) {
                 data.append(key, value); // Archivos sin cambios
             } else {
-                data.append(`{{${key}}}`, value.toUpperCase()); // Campos de texto en mayúsculas
+                const existingValue = data.get(`{{${key}}}`);
+                
+                // Si ya hay un "SI", no agregues "NO"
+                if (existingValue === "SI") return;
+                
+                // Si el nuevo valor es "SI", sobrescribe
+                if (value.toUpperCase() === "SI") data.set(`{{${key}}}`, "SI");
+                
+                // Solo agrega "NO" si no existe un valor previo
+                else {
+                    if (!existingValue) 
+                        data.append(`{{${key}}}`, value.toUpperCase());
+                }
             }
         });
-        
-
 
     } catch (error) {
         document.getElementById("modal").style.display = "none";
